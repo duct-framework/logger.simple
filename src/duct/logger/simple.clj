@@ -2,17 +2,18 @@
   (:require [amalloy.ring-buffer :as rb]
             [duct.logger :as logger]
             [integrant.core :as ig])
-  (:import [java.util.concurrent ScheduledThreadPoolExecutor TimeUnit]))
+  (:import [java.time Instant]
+           [java.util.concurrent ScheduledThreadPoolExecutor TimeUnit]))
 
 (defrecord BufferedLogger [buffer executor]
   logger/Logger
   (-log [_ level ns-str file line id event data]
-    (swap! buffer conj [level ns-str file line id event data])))
+    (swap! buffer conj [(Instant/now) level ns-str file line id event data])))
 
-(defn- stdout-logger [[_level _ns-str _file _line _id event data]]
+(defn- stdout-logger [[time _level _ns-str _file _line _id event data]]
   (if data
-    (prn event data)
-    (prn event)))
+    (println (str time) event (pr-str data))
+    (println (str time) event)))
 
 (defn- consume-logs [buffer amount logger]
   (let [log (peek buffer)]

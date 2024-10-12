@@ -13,6 +13,9 @@
           (logger/info logger :example/foo)
           (logger/info logger :example/bar {:x 1})
           (Thread/sleep 50))
-        (is (= ":example/foo\n:example/bar {:x 1}\n" (str output))))
+        (is (re-matches
+             #"(?x)[0-9TZ.:-]+\s:example/foo\n
+                   [0-9TZ.:-]+\s:example/bar\s\{:x\s1\}\n"
+             (str output))))
       (finally
         (ig/halt! system)))))
