@@ -1,4 +1,4 @@
-# Duct Simple Logger
+# Duct Simple Logger [![Build Status](https://github.com/duct-framework/logger.simple/actions/workflows/test.yml/badge.svg)](https://github.com/duct-framework/logger.simple/actions/workflows/test.yml)
 
 A simple logging library for the [Duct][] framework that's fully
 compatible with [Integrant][].
