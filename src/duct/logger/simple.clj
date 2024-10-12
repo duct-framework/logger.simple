@@ -24,11 +24,13 @@
   (doto (ScheduledThreadPoolExecutor. 1)
     (.scheduleAtFixedRate f delay delay TimeUnit/MILLISECONDS)))
 
-(defmethod ig/init-key ::stdout [_ _]
-  (let [buffer   (atom (rb/ring-buffer 1024))
+(defmethod ig/init-key ::stdout
+  [_ {:keys [buffer-size polling-rate poll-chunk-size]
+      :or   {buffer-size 1024, polling-rate 5, poll-chunk-size 8}}]
+  (let [buffer   (atom (rb/ring-buffer buffer-size))
         executor (start-polling
-                  #(swap! buffer consume-logs 8 stdout-logger)
-                  5)]
+                  #(swap! buffer consume-logs poll-chunk-size stdout-logger)
+                  polling-rate)]
     (->BufferedLogger buffer executor)))
 
 (defmethod ig/halt-key! ::stdout [_ {:keys [executor]}]
