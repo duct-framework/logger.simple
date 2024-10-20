@@ -1,5 +1,6 @@
 (ns duct.logger.simple
   (:require [amalloy.ring-buffer :as rb]
+            [clojure.java.io :as io]
             [duct.logger :as logger]
             [integrant.core :as ig])
   (:import [java.time Instant]
@@ -22,6 +23,13 @@
         (if data
           (println (str time) event (pr-str data))
           (println (str time) event))))))
+
+(defmethod make-appender :file [{:keys [path] :as opts}]
+  (let [stdout-appender (make-appender (assoc opts :type :stdout))]
+    (fn [log]
+      (with-open [w (io/writer path :append true)]
+        (binding [*out* w]
+          (stdout-appender log))))))
 
 (defn- consume-logs [buffer amount appenders]
   (let [log (peek buffer)]
