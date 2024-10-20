@@ -18,13 +18,28 @@ Or to your Leiningen project file:
 
 ## Usage
 
-You can use the `:duct.logger.simple/stdout` logger to output logging
-events. This key derives from `:duct/logger`.
+You can use the `:duct.logger/simple` logger to output logging events.
+This key derives from `:duct/logger`.
 
 ```edn
-{:duct.logger.simple/stdout {}
+{:duct.logger/simple {:appenders [{:type :stdout}]}
  :example/hello-world {:logger #ig/ref :duct/logger}}
 ```
+
+The logger should have one or more appenders. These appenders send the
+logs to some outputs, and there's two available:
+
+- `:stdout` - logs get sent to STDOUT
+- `:file`   - logs get appended to a file
+
+Each appender has two keys in common:
+
+- `:type`   - the type of the appender (see above)
+- `:levels` - a set of log levels (or `:all`) to limit the appender to
+
+The `:file` appender has one additional option:
+
+- `:path` - the path of the log file
 
 The logger uses the protocol from the [duct.logger][] library:
 
