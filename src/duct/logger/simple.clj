@@ -10,29 +10,39 @@
   (-log [_ level ns-str file line id event data]
     (swap! buffer conj [(Instant/now) level ns-str file line id event data])))
 
-(defn- stdout-logger [[time _level _ns-str _file _line _id event data]]
-  (if data
-    (println (str time) event (pr-str data))
-    (println (str time) event)))
+(defn- level-checker [levels]
+  (if (= :all levels) (constantly true) (set levels)))
 
-(defn- consume-logs [buffer amount logger]
+(defmulti make-appender :type)
+
+(defmethod make-appender :stdout [{:keys [levels] :or {levels :all}}]
+  (let [print-level? (level-checker levels)]
+    (fn [[time level _ns-str _file _line _id event data]]
+      (when (print-level? level)
+        (if data
+          (println (str time) event (pr-str data))
+          (println (str time) event))))))
+
+(defn- consume-logs [buffer amount appenders]
   (let [log (peek buffer)]
     (if (and log (pos? amount))
-      (do (logger log) (recur (pop buffer) (dec amount) logger))
+      (do (run! #(% log) appenders)
+          (recur (pop buffer) (dec amount) appenders))
       buffer)))
 
 (defn- start-polling [^Runnable f ^long delay]
   (doto (ScheduledThreadPoolExecutor. 1)
     (.scheduleAtFixedRate f delay delay TimeUnit/MILLISECONDS)))
 
-(defmethod ig/init-key ::stdout
-  [_ {:keys [buffer-size polling-rate poll-chunk-size]
+(defmethod ig/init-key :duct.logger/simple
+  [_ {:keys [buffer-size polling-rate poll-chunk-size appenders]
       :or   {buffer-size 1024, polling-rate 5, poll-chunk-size 8}}]
-  (let [buffer   (atom (rb/ring-buffer buffer-size))
-        executor (start-polling
-                  #(swap! buffer consume-logs poll-chunk-size stdout-logger)
-                  polling-rate)]
+  (let [buffer    (atom (rb/ring-buffer buffer-size))
+        appenders (mapv make-appender appenders)
+        executor  (start-polling
+                   #(swap! buffer consume-logs poll-chunk-size appenders)
+                   polling-rate)]
     (->BufferedLogger buffer executor)))
 
-(defmethod ig/halt-key! ::stdout [_ {:keys [executor]}]
+(defmethod ig/halt-key! :duct.logger/simple [_ {:keys [executor]}]
   (.shutdown ^ScheduledThreadPoolExecutor executor))
