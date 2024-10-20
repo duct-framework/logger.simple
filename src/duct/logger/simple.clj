@@ -6,7 +6,7 @@
   (:import [java.time Instant]
            [java.util.concurrent ScheduledThreadPoolExecutor TimeUnit]))
 
-(defrecord BufferedLogger [buffer executor]
+(defrecord BufferedLogger [buffer executor appenders]
   logger/Logger
   (-log [_ level ns-str file line id event data]
     (swap! buffer conj [(Instant/now) level ns-str file line id event data])))
@@ -25,11 +25,15 @@
           (println (str time) event))))))
 
 (defmethod make-appender :file [{:keys [path] :as opts}]
-  (let [stdout-appender (make-appender (assoc opts :type :stdout))]
-    (fn [log]
-      (with-open [w (io/writer path :append true)]
-        (binding [*out* w]
-          (stdout-appender log))))))
+  (let [appender (make-appender (assoc opts :type :stdout))
+        writer   (io/writer path :append true)]
+    (reify
+      clojure.lang.IFn
+      (invoke [_ log]
+        (binding [*out* writer] (appender log)))
+      java.io.Closeable
+      (close [_]
+        (.close writer)))))
 
 (defn- consume-logs [buffer amount appenders]
   (let [log (peek buffer)]
@@ -50,7 +54,8 @@
         executor  (start-polling
                    #(swap! buffer consume-logs poll-chunk-size appenders)
                    polling-rate)]
-    (->BufferedLogger buffer executor)))
+    (->BufferedLogger buffer executor appenders)))
 
-(defmethod ig/halt-key! :duct.logger/simple [_ {:keys [executor]}]
-  (.shutdown ^ScheduledThreadPoolExecutor executor))
+(defmethod ig/halt-key! :duct.logger/simple [_ {:keys [executor appenders]}]
+  (.shutdown ^ScheduledThreadPoolExecutor executor)
+  (run! #(when (instance? java.io.Closeable %) (.close %)) appenders))
