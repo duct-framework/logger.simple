@@ -14,26 +14,33 @@
 (defn- level-checker [levels]
   (if (= :all levels) (constantly true) (set levels)))
 
+(let [space   (int \space)
+      newline (int \newline)]
+  (defn- write-logline
+    [writer [time level _ns-str _file _line _id event data] print-level?]
+    (when (print-level? level)
+      (.write writer (str time))
+      (.write writer space)
+      (.write writer (str event))
+      (when data
+        (.write writer space)
+        (.write writer (pr-str data)))
+      (.write writer newline))))
+
 (defmulti make-appender :type)
 
 (defmethod make-appender :stdout [{:keys [levels] :or {levels :all}}]
   (let [print-level? (level-checker levels)]
-    (fn [[time level _ns-str _file _line _id event data]]
-      (when (print-level? level)
-        (if data
-          (println (str time) event (pr-str data))
-          (println (str time) event))))))
+    (fn [log] (write-logline *out* log print-level?))))
 
-(defmethod make-appender :file [{:keys [path] :as opts}]
-  (let [appender (make-appender (assoc opts :type :stdout))
-        writer   (io/writer path :append true)]
+(defmethod make-appender :file [{:keys [levels path] :or {levels :all}}]
+  (let [print-level? (level-checker levels)
+        writer       (io/writer (io/file path) :append true)]
     (reify
       clojure.lang.IFn
-      (invoke [_ log]
-        (binding [*out* writer] (appender log)))
+      (invoke [_ log] (write-logline writer log print-level?))
       java.io.Closeable
-      (close [_]
-        (.close writer)))))
+      (close [_] (.close writer)))))
 
 (defn- consume-logs [buffer amount appenders]
   (let [log (peek buffer)]

@@ -30,10 +30,11 @@
       (let [logger (:duct.logger/simple system)]
         (logger/info logger :example/foo)
         (logger/info logger :example/bar {:x 1})
-        (Thread/sleep 100)
-        (is (re-matches
-             #"(?x)[0-9TZ.:-]+\s:example/foo\n
-                   [0-9TZ.:-]+\s:example/bar\s\{:x\s1\}\n"
-             (slurp tempfile))))
+        (Thread/sleep 100))
       (finally
-        (ig/halt! system)))))
+        (ig/halt! system)))
+    (is (re-matches
+         #"(?x)[0-9TZ.:-]+\s:example/foo\n
+                   [0-9TZ.:-]+\s:example/bar\s\{:x\s1\}\n"
+         (slurp tempfile)))
+    (.delete tempfile)))
