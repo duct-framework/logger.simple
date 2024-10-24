@@ -49,7 +49,7 @@ The logger uses the protocol from the [duct.logger][] library:
             [integrant.core :as ig]))
 
 (defmethod ig/init-key ::hello-world [_ {:keys [logger]}]
-  (logger/log logger ::hello-world))
+  (logger/info logger ::hello-world))
 ```
 
 [duct.logger]: https://github.com/duct-framework/logger
