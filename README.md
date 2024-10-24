@@ -26,21 +26,6 @@ This key derives from `:duct/logger`.
  :example/hello-world {:logger #ig/ref :duct/logger}}
 ```
 
-The logger should have one or more appenders. These appenders send the
-logs to some outputs, and there's two available:
-
-- `:stdout` - logs get sent to STDOUT
-- `:file`   - logs get appended to a file
-
-Each appender has two keys in common:
-
-- `:type`   - the type of the appender (see above)
-- `:levels` - a set of log levels (or `:all`) to limit the appender to
-
-The `:file` appender has one additional option:
-
-- `:path` - the path of the log file
-
 The logger uses the protocol from the [duct.logger][] library:
 
 ```clojure
@@ -53,6 +38,31 @@ The logger uses the protocol from the [duct.logger][] library:
 ```
 
 [duct.logger]: https://github.com/duct-framework/logger
+
+The logger should have one or more appenders added to the `:appenders`
+key in the option map. These appenders are responsible for sending the
+logs to some output, and there's two types available:
+
+- `:stdout` - logs get sent to STDOUT
+- `:file`   - logs get appended to a file
+
+Appenders are specified as maps, and the `:type` key determines the
+type.
+
+#### STDOUT logger
+
+The STDOUT logger prints to STDOUT and supports the following options:
+
+- `:levels` - a set of log levels (or `:all`) to limit the appender to
+- `:timestamps?` - whether to print timestamps (defaults to true)
+
+#### File logger
+
+The `:file` appender appends logs to a file, and takes the following
+options:
+
+- `:levels` - a set of log levels (or `:all`) to limit the appender to
+- `:path` - the path of the log file
 
 ## License
 

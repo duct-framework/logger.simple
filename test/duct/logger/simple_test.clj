@@ -73,3 +73,21 @@
            #"[0-9TZ.:-]+\s:example/bar\s\{:x\s1\}\n"
            (slurp tempfile)))
       (.delete tempfile))))
+
+(deftest stdout-timestamps-test
+  (let [system (ig/init {:duct.logger/simple
+                         {:appenders [{:type :stdout
+                                       :timestamps? false}]}})]
+    (try
+      (let [logger (:duct.logger/simple system)
+            output (java.io.StringWriter.)]
+        (with-redefs [*out* output]
+          (logger/info logger :example/foo)
+          (logger/info logger :example/bar {:x 1})
+          (Thread/sleep 100))
+        (is (re-matches
+             #"(?x):example/foo\n
+                   :example/bar\s\{:x\s1\}\n"
+             (str output))))
+      (finally
+        (ig/halt! system)))))

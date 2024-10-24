@@ -17,28 +17,31 @@
 (let [space   (int \space)
       newline (int \newline)]
   (defn- write-logline
-    [writer [time level _ns-str _file _line _id event data] print-level?]
-    (when (print-level? level)
-      (.write writer (str time))
-      (.write writer space)
-      (.write writer (str event))
-      (when data
-        (.write writer space)
-        (.write writer (pr-str data)))
-      (.write writer newline))))
+    [writer logline print-level? timestamps?]
+    (let [[time level _ns-str _file _line _id event data] logline]
+      (when (print-level? level)
+        (when timestamps?
+          (.write writer (str time))
+          (.write writer space))
+        (.write writer (str event))
+        (when data
+          (.write writer space)
+          (.write writer (pr-str data)))
+        (.write writer newline)))))
 
 (defmulti make-appender :type)
 
-(defmethod make-appender :stdout [{:keys [levels] :or {levels :all}}]
+(defmethod make-appender :stdout
+  [{:keys [levels timestamps?] :or {levels :all, timestamps? true}}]
   (let [print-level? (level-checker levels)]
-    (fn [log] (write-logline *out* log print-level?))))
+    (fn [log] (write-logline *out* log print-level? timestamps?))))
 
 (defmethod make-appender :file [{:keys [levels path] :or {levels :all}}]
   (let [print-level? (level-checker levels)
         writer       (io/writer (io/file path) :append true)]
     (reify
       clojure.lang.IFn
-      (invoke [_ log] (write-logline writer log print-level?))
+      (invoke [_ log] (write-logline writer log print-level? true))
       java.io.Closeable
       (close [_] (.close writer)))))
 
