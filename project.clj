@@ -6,4 +6,4 @@
   :dependencies [[org.clojure/clojure "1.11.4"]
                  [amalloy/ring-buffer "1.3.1"]
                  [org.duct-framework/logger "0.3.0"]
-                 [integrant "0.12.1"]])
+                 [integrant "0.13.0"]])
