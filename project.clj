@@ -1,4 +1,4 @@
-(defproject org.duct-framework/logger.simple "0.3.0"
+(defproject org.duct-framework/logger.simple "0.4.0"
   :description "A simple logger for the Duct framework"
   :url "https://github.com/duct-framework/logger.simple"
   :license {:name "Eclipse Public License"
