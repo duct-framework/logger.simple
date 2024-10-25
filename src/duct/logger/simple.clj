@@ -29,7 +29,8 @@
         (when data
           (.write writer space)
           (.write writer (pr-str data)))
-        (.write writer newline)))))
+        (.write writer newline)
+        (.flush writer)))))
 
 (defmulti make-appender :type)
 
