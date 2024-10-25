@@ -54,7 +54,7 @@ type.
 The STDOUT logger prints to STDOUT and supports the following options:
 
 - `:levels` - a set of log levels (or `:all`) to limit the appender to
-- `:timestamps?` - whether to print timestamps (defaults to true)
+- `:brief?` - whether to omit timestamps and levels (defaults to false)
 
 #### File logger
 

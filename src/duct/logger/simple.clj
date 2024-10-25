@@ -17,11 +17,13 @@
 (let [space   (int \space)
       newline (int \newline)]
   (defn- write-logline
-    [writer logline print-level? timestamps?]
+    [writer logline print-level? brief?]
     (let [[time level _ns-str _file _line _id event data] logline]
       (when (print-level? level)
-        (when timestamps?
+        (when-not brief?
           (.write writer (str time))
+          (.write writer space)
+          (.write writer (str level))
           (.write writer space))
         (.write writer (str event))
         (when data
@@ -32,16 +34,16 @@
 (defmulti make-appender :type)
 
 (defmethod make-appender :stdout
-  [{:keys [levels timestamps?] :or {levels :all, timestamps? true}}]
+  [{:keys [levels brief?] :or {levels :all, brief? false}}]
   (let [print-level? (level-checker levels)]
-    (fn [log] (write-logline *out* log print-level? timestamps?))))
+    (fn [log] (write-logline *out* log print-level? brief?))))
 
 (defmethod make-appender :file [{:keys [levels path] :or {levels :all}}]
   (let [print-level? (level-checker levels)
         writer       (io/writer (io/file path) :append true)]
     (reify
       clojure.lang.IFn
-      (invoke [_ log] (write-logline writer log print-level? true))
+      (invoke [_ log] (write-logline writer log print-level? false))
       java.io.Closeable
       (close [_] (.close writer)))))
 
