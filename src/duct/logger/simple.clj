@@ -4,6 +4,7 @@
             [duct.logger :as logger]
             [integrant.core :as ig])
   (:import [java.time Instant]
+           [java.time.temporal ChronoUnit]
            [java.util.concurrent ScheduledThreadPoolExecutor TimeUnit]))
 
 (defrecord BufferedLogger [buffer executor appenders]
@@ -14,6 +15,9 @@
 (defn- level-checker [levels]
   (if (= :all levels) (constantly true) (set levels)))
 
+(defn- format-instant [^Instant instant]
+  (-> instant (.truncatedTo ChronoUnit/MILLIS) .toString))
+
 (let [space   (int \space)
       newline (int \newline)]
   (defn- write-logline
@@ -21,7 +25,7 @@
     (let [[time level _ns-str _file _line _id event data] logline]
       (when (print-level? level)
         (when-not brief?
-          (.write writer (str time))
+          (.write writer (format-instant time))
           (.write writer space)
           (.write writer (str level))
           (.write writer space))

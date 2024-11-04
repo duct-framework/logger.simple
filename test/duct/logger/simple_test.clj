@@ -15,8 +15,8 @@
           (logger/info logger :example/bar {:x 1})
           (Thread/sleep 100))
         (is (re-matches
-             #"(?x)[0-9TZ.:-]+\s:debug\s:example/foo\n
-                   [0-9TZ.:-]+\s:info\s:example/bar\s\{:x\s1\}\n"
+             #"(?x)[0-9TZ.:-]{24}\s:debug\s:example/foo\n
+                   [0-9TZ.:-]{24}\s:info\s:example/bar\s\{:x\s1\}\n"
              (str output))))
       (finally
         (ig/halt! system)))))
@@ -34,8 +34,8 @@
       (finally
         (ig/halt! system)))
     (is (re-matches
-         #"(?x)[0-9TZ.:-]+\s:debug\s:example/foo\n
-               [0-9TZ.:-]+\s:info\s:example/bar\s\{:x\s1\}\n"
+         #"(?x)[0-9TZ.:-]{24}\s:debug\s:example/foo\n
+               [0-9TZ.:-]{24}\s:info\s:example/bar\s\{:x\s1\}\n"
          (slurp tempfile)))
     (.delete tempfile)))
 
@@ -52,7 +52,7 @@
             (logger/info logger :example/bar {:x 1})
             (Thread/sleep 100))
           (is (re-matches
-               #"[0-9TZ.:-]+\s:info\s:example/bar\s\{:x\s1\}\n"
+               #"[0-9TZ.:-]{24}\s:info\s:example/bar\s\{:x\s1\}\n"
                (str output))))
         (finally
           (ig/halt! system)))))
@@ -70,7 +70,7 @@
         (finally
           (ig/halt! system)))
       (is (re-matches
-           #"[0-9TZ.:-]+\s:info\s:example/bar\s\{:x\s1\}\n"
+           #"[0-9TZ.:-]{24}\s:info\s:example/bar\s\{:x\s1\}\n"
            (slurp tempfile)))
       (.delete tempfile))))
 
