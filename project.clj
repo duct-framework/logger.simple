@@ -5,5 +5,5 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.11.4"]
                  [amalloy/ring-buffer "1.3.1"]
-                 [org.duct-framework/logger "0.3.0"]
-                 [integrant "0.13.0"]])
+                 [org.duct-framework/logger "0.4.0"]
+                 [integrant "0.13.1"]])
