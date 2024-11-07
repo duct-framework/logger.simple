@@ -44,6 +44,7 @@
     (fn [log] (write-logline *out* log print-level? brief?))))
 
 (defmethod make-appender :file [{:keys [levels path] :or {levels :all}}]
+  (io/make-parents path)
   (let [print-level? (level-checker levels)
         writer       (io/writer (io/file path) :append true)]
     (reify
