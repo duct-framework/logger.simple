@@ -64,6 +64,16 @@ options:
 - `:levels` - a set of log levels (or `:all`) to limit the appender to
 - `:path` - the path of the log file
 
+### Fine-tuning
+
+There are a number of other options for fine-tuning the logger:
+
+- `:buffer-size` - the size of the logging ring buffer (default: 1024)
+- `:polling-rate` - the delay in ms between each poll (default: 5)
+- `:poll-chunk-size` - the max no. of logs to process each poll (default: 8)
+- `:shutdown-delay` - the delay in ms before shutting down (default: 100)
+- `:shutdown-timeout` - the time to wait in ms for shutdown (default: 1000)
+
 ## License
 
 Copyright © 2024 James Reeves
