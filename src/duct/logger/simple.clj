@@ -5,9 +5,10 @@
             [integrant.core :as ig])
   (:import [java.time Instant]
            [java.time.temporal ChronoUnit]
-           [java.util.concurrent ScheduledThreadPoolExecutor TimeUnit]))
+           [java.util.concurrent Executors ScheduledThreadPoolExecutor
+            TimeUnit ThreadFactory]))
 
-(defrecord BufferedLogger [buffer executor appenders]
+(defrecord BufferedLogger [buffer executor appenders options]
   logger/Logger
   (-log [_ level ns-str file line id event data]
     (swap! buffer conj [(Instant/now) level ns-str file line id event data])))
@@ -60,20 +61,35 @@
           (recur (pop buffer) (dec amount) appenders))
       buffer)))
 
+(defn- daemon-thread-factory ^ThreadFactory []
+  (let [default-factory (Executors/defaultThreadFactory)]
+    (reify ThreadFactory
+      (newThread [_ runnable]
+        (doto (.newThread default-factory runnable)
+          (.setDaemon true))))))
+
 (defn- start-polling [^Runnable f ^long delay]
-  (doto (ScheduledThreadPoolExecutor. 1)
+  (doto (ScheduledThreadPoolExecutor. 1 (daemon-thread-factory))
     (.scheduleAtFixedRate f delay delay TimeUnit/MILLISECONDS)))
 
 (defmethod ig/init-key :duct.logger/simple
   [_ {:keys [buffer-size polling-rate poll-chunk-size appenders]
-      :or   {buffer-size 1024, polling-rate 5, poll-chunk-size 8}}]
+      :or   {buffer-size 1024, polling-rate 5, poll-chunk-size 8}
+      :as   options}]
   (let [buffer    (atom (rb/ring-buffer buffer-size))
         appenders (mapv make-appender appenders)
         executor  (start-polling
                    #(swap! buffer consume-logs poll-chunk-size appenders)
                    polling-rate)]
-    (->BufferedLogger buffer executor appenders)))
+    (->BufferedLogger buffer executor appenders options)))
 
-(defmethod ig/halt-key! :duct.logger/simple [_ {:keys [executor appenders]}]
-  (.shutdown ^ScheduledThreadPoolExecutor executor)
-  (run! #(when (instance? java.io.Closeable %) (.close %)) appenders))
+(defmethod ig/halt-key! :duct.logger/simple
+  [_ {:keys [executor appenders]
+      {:keys [shutdown-delay shutdown-timeout]
+       :or   {shutdown-delay 100, shutdown-timeout 1000}} :options}]
+  (Thread/sleep shutdown-delay)
+  (doto ^ScheduledThreadPoolExecutor executor
+    (.shutdown)
+    (.awaitTermination shutdown-timeout TimeUnit/MILLISECONDS))
+  (run! #(when (instance? java.io.Closeable %) (.close %))
+        appenders))
