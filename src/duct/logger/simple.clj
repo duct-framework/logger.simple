@@ -54,12 +54,15 @@
       java.io.Closeable
       (close [_] (.close writer)))))
 
-(defn- consume-logs [buffer amount appenders]
-  (let [log (peek buffer)]
-    (if (and log (pos? amount))
-      (do (run! #(% log) appenders)
-          (recur (pop buffer) (dec amount) appenders))
-      buffer)))
+(defn- safe-pop [buffer]
+  (cond-> buffer (pos? (count buffer)) pop))
+
+(defn- consume-logs! [buffer amount appenders]
+  (loop [n amount]
+    (when (pos? n)
+      (when-some [log (peek (first (swap-vals! buffer safe-pop)))]
+        (run! #(% log) appenders)
+        (recur (dec n))))))
 
 (defn- daemon-thread-factory ^ThreadFactory []
   (let [default-factory (Executors/defaultThreadFactory)]
@@ -79,7 +82,7 @@
   (let [buffer    (atom (rb/ring-buffer buffer-size))
         appenders (mapv make-appender appenders)
         executor  (start-polling
-                   #(swap! buffer consume-logs poll-chunk-size appenders)
+                   #(consume-logs! buffer poll-chunk-size appenders)
                    polling-rate)]
     (->BufferedLogger buffer executor appenders options)))
 
