@@ -10,11 +10,11 @@ compatible with [Integrant][].
 
 Add the following dependency to your deps.edn file:
 
-    org.duct-framework/logger.simple {:mvn/version "0.4.5"}
+    org.duct-framework/logger.simple {:mvn/version "0.4.6"}
 
 Or to your Leiningen project file:
 
-    [org.duct-framework/logger.simple "0.4.5"]
+    [org.duct-framework/logger.simple "0.4.6"]
 
 ## Usage
 
