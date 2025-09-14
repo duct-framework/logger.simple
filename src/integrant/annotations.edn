@@ -1,0 +1,24 @@
+{:duct.logger/simple
+ {:doc
+  "A simple buffered logger that adheres to the duct.logger/Logger protocol.
+
+  Takes the following options:
+  - `:appenders` - a collection of appender configurations
+  - `:buffer-size` - the size of the logging ring buffer (default: 1024)
+  - `:polling-rate` - the delay in ms between each poll (default: 5)
+  - `:poll-chunk-size` - the max no. of logs to process each poll (default: 8)
+  - `:shutdown-delay` - the delay in ms before shutting down (default: 100)
+  - `:shutdown-timeout` - the time to wait in ms for shutdown (default: 1000)
+
+  Appender configurations are maps that have a `:type` option that can be one
+  of:
+  - `:file` - logs are appended to a file
+  - `:stdout` - logs are sent to STDOUT
+
+  File appenders have the following options:
+  - `:levels` - a set of log levels (or `:all`) to limit the appender to
+  - `:brief?` - whether to omit timestamps and levels (defaults to false)
+
+  STDOUT appenders have the following options:
+  - `:levels` - a set of log levels (or `:all`) to limit the appender to
+  - `:path` - the path of the log file"}}
